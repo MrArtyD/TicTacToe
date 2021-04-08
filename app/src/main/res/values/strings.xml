@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">TicTacToe</string>
+    <string name="welcome_message">Welcome to my tic-tac-toe game!</string>
+    <string name="game_mode_message">Choose a mode of game</string>
+    <string name="pve_button">PvE</string>
+    <string name="pvp_button">PvP</string>
+    <string name="name_for_player_1_text">Name for player 1</string>
+    <string name="player1_et">Player1</string>
+    <string name="player_1_name_hint">Enter player 1 name</string>
+    <string name="name_for_player_2_text">Name for player 2</string>
+    <string name="player2_et">Player2</string>
+    <string name="player_2_name_hint">Enter player 2 name</string>
+    <string name="start_game_btn">Start Game</string>
+    <string name="end_game_btn">End Game</string>
+    <string name="turn_of">Turn of</string>
+    <string name="reset_game">Reset game</string>
+</resources>
