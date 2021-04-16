@@ -28,7 +28,7 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
     private var tvPlayersTurn: TextView? = null
 
     private var buttonsArray = arrayOf<Array<Button>>()
-    private var unclickedButtons: ArrayList<String>? = null
+    private var unclickedButtons: ArrayList<Button>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,11 +38,11 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun initializeGame() {
-        val nameOne : String = intent.getStringExtra(ChooseNameActivity.EXTRA_NAME_ONE)
-        val nameTwo : String = intent.getStringExtra(ChooseNameActivity.EXTRA_NAME_TWO)
+        val nameOne : String? = intent.getStringExtra(ChooseNameActivity.EXTRA_NAME_ONE)
+        val nameTwo : String? = intent.getStringExtra(ChooseNameActivity.EXTRA_NAME_TWO)
 
-        playerOne = Player(nameOne)
-        playerTwo = Player(nameTwo)
+        playerOne = Player(nameOne!!)
+        playerTwo = Player(nameTwo!!)
 
         tvPlayerOneScore = findViewById(R.id.tv_player1_score)
         tvPlayerTwoScore = findViewById(R.id.tv_player2_score)
@@ -61,13 +61,13 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun initializeButtons() {
-        for (i in 0..2){
+        for (indexOne in 0..2){
             var array = arrayOf<Button>()
-            for (j in 0..2){
-                val buttonID = "button_$i$j"
+            for (indexTwo in 0..2){
+                val buttonID = "button_$indexOne$indexTwo"
                 val resID = resources.getIdentifier(buttonID, "id", packageName)
                 array += findViewById<Button>(resID)
-                array[j].setOnClickListener(this)
+                array[indexTwo].setOnClickListener(this)
             }
             buttonsArray += array
         }
@@ -93,10 +93,10 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
         if (checkForWin()) {
             if (turnOfPlayerOne) {
                 playerWins(playerOne)
-                tvPlayerOneScore?.text = playerOne?.score.toString()
+                tvPlayerOneScore?.text = playerOne?.getScore().toString()
             } else {
                 playerWins(playerTwo)
-                tvPlayerTwoScore?.text = playerTwo?.score.toString()
+                tvPlayerTwoScore?.text = playerTwo?.getScore().toString()
             }
         } else if (roundCount == 9) {
             draw()
@@ -105,7 +105,7 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
 
             if (!isPvP && !turnOfPlayerOne){
                 val handler = Handler()
-                handler.postDelayed(Runnable {
+                handler.postDelayed({
                     moveOfEnvironment()
                 }, 800)
             }
@@ -163,9 +163,9 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
 
 
     private fun resetField() {
-        for (i in 0..2) {
-            for (j in 0..2) {
-                buttonsArray[i][j].text = ""
+        buttonsArray.forEach {
+            it.forEach { button ->
+                button.text = ""
             }
         }
         roundCount = 0
@@ -189,25 +189,20 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun initializeUnclickedButtons() {
-        unclickedButtons = arrayListOf("00", "01", "02",
-                                       "10", "11", "12",
-                                       "20", "21", "22")
+        unclickedButtons = arrayListOf()
+        buttonsArray.forEach {
+            it.forEach {button ->
+                unclickedButtons!!.add(button)
+            }
+        }
     }
 
     private fun setAsClicked(button: Button) {
-        val buttonName: String = button.resources.getResourceEntryName(button.id)
-        val length: Int = buttonName.length
-        val buttonID: String = buttonName.substring(length-2)
-        unclickedButtons!!.remove(buttonID)
+        unclickedButtons!!.remove(button)
     }
 
     private fun moveOfEnvironment() {
-        val randomIndex = Random.nextInt(0, unclickedButtons!!.size)
-        val randomID: String = unclickedButtons!![randomIndex]
-        val indexOne = randomID.take(1).toInt()
-        val indexTwo = randomID.takeLast(1).toInt()
-
-        buttonsArray[indexOne][indexTwo].performClick()
+        unclickedButtons!!.random().performClick()
     }
 
 }
