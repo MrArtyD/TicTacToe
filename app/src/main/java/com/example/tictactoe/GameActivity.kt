@@ -93,10 +93,10 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
         if (checkForWin()) {
             if (turnOfPlayerOne) {
                 playerWins(playerOne)
-                tvPlayerOneScore?.text = playerOne?.getScore().toString()
+                tvPlayerOneScore?.text = playerOne?.score.toString()
             } else {
                 playerWins(playerTwo)
-                tvPlayerTwoScore?.text = playerTwo?.getScore().toString()
+                tvPlayerTwoScore?.text = playerTwo?.score.toString()
             }
         } else if (roundCount == 9) {
             draw()

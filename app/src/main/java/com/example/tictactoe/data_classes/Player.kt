@@ -2,11 +2,8 @@ package com.example.tictactoe.data_classes
 
 class Player (val name: String){
 
-    private var score: Int = 0
-
-    fun getScore() : Int{
-        return score
-    }
+    var score: Int = 0
+        private set
 
     fun increaseScore(){
         score++
