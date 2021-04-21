@@ -14,4 +14,6 @@
     <string name="end_game_btn">End Game</string>
     <string name="turn_of">Turn of</string>
     <string name="reset_game">Reset game</string>
+    <string name="X_Value">X</string>
+    <string name="O_Value">O</string>
 </resources>

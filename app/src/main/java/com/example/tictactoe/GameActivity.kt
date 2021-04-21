@@ -2,33 +2,35 @@ package com.example.tictactoe
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.tictactoe.data_classes.Player
-import kotlin.random.Random
-import kotlin.random.nextInt
+import com.example.tictactoe.classes.AI
+import com.example.tictactoe.classes.Player
+import com.example.tictactoe.classes.functionals.GameEvaluator
 
 
 class GameActivity : AppCompatActivity(), View.OnClickListener {
 
+    private lateinit var x: String
+    private lateinit var o: String
+
     private var isPvP : Boolean = true
     private var gameEnded : Boolean = false
-    private var turnOfPlayerOne = true
     private var roundCount : Int = 0
+    private lateinit var currentTurnSymbol : String
 
-    private var playerOne: Player?  = null
-    private var playerTwo: Player?  = null
+    private lateinit var playerOne: Player
+    private lateinit var playerTwo: Player
 
-    private var tvPlayerOneScore: TextView? = null
-    private var tvPlayerTwoScore: TextView? = null
-    private var tvPlayersTurn: TextView? = null
+    private lateinit var tvPlayerOneScore: TextView
+    private lateinit var tvPlayerTwoScore: TextView
+    private lateinit var tvPlayersTurn: TextView
 
     private var buttonsArray = arrayOf<Array<Button>>()
-    private var unclickedButtons: ArrayList<Button>? = null
+    private val gameEndEvaluator = GameEvaluator()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,24 +42,24 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
     private fun initializeGame() {
         val nameOne : String? = intent.getStringExtra(ChooseNameActivity.EXTRA_NAME_ONE)
         val nameTwo : String? = intent.getStringExtra(ChooseNameActivity.EXTRA_NAME_TWO)
+        isPvP = intent.getBooleanExtra(MainActivity.EXTRA_BOOLEAN, true)
 
-        playerOne = Player(nameOne!!)
-        playerTwo = Player(nameTwo!!)
+        x = getString(R.string.X_Value)
+        o = getString(R.string.O_Value)
+
+        playerOne = Player(nameOne!!, x, o)
+        playerTwo = if (isPvP) Player(nameTwo!!, o, x) else AI("AI", o, x)
 
         tvPlayerOneScore = findViewById(R.id.tv_player1_score)
         tvPlayerTwoScore = findViewById(R.id.tv_player2_score)
         tvPlayersTurn = findViewById(R.id.tv_turn)
 
-        (findViewById<TextView>(R.id.tv_player1_name)).text = "$nameOne:"
-        (findViewById<TextView>(R.id.tv_player2_name)).text = "$nameTwo:"
-        tvPlayersTurn?.text = getString(R.string.turn_of) + " $nameOne"
+        (findViewById<TextView>(R.id.tv_player1_name)).text = "${playerOne.name}:"
+        (findViewById<TextView>(R.id.tv_player2_name)).text = "${playerTwo.name}:"
+        tvPlayersTurn.text = getString(R.string.turn_of) + " $nameOne"
 
         initializeButtons()
-
-        isPvP = intent.getBooleanExtra(MainActivity.EXTRA_BOOLEAN, true)
-        if (!isPvP){
-            initializeUnclickedButtons()
-        }
+        currentTurnSymbol = x
     }
 
     private fun initializeButtons() {
@@ -78,77 +80,48 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
             return
         }
 
-        if (turnOfPlayerOne) {
-            view.text = "X"
+        if (currentTurnSymbol == x) {
+            view.text = x
         } else {
-            view.text = "O"
+            view.text = o
         }
 
         roundCount++
 
-        if (!isPvP){
-            setAsClicked(view)
-        }
-
-        if (checkForWin()) {
-            if (turnOfPlayerOne) {
+        if (gameEndEvaluator.evaluate(buttonsArray)) {
+            if (currentTurnSymbol == playerOne.playerSymbol) {
                 playerWins(playerOne)
-                tvPlayerOneScore?.text = playerOne?.score.toString()
+                tvPlayerOneScore.text = playerOne.score.toString()
             } else {
                 playerWins(playerTwo)
-                tvPlayerTwoScore?.text = playerTwo?.score.toString()
+                tvPlayerTwoScore.text = playerTwo.score.toString()
             }
         } else if (roundCount == 9) {
             draw()
         } else {
             changeTurn()
 
-            if (!isPvP && !turnOfPlayerOne){
-                val handler = Handler()
-                handler.postDelayed({
-                    moveOfEnvironment()
-                }, 800)
+            if (!isPvP && currentTurnSymbol == (playerTwo as AI).playerSymbol){
+                moveOfAI()
             }
         }
+    }
+
+    private fun moveOfAI() {
+        (playerTwo as AI).makeBestMove(buttonsArray)
     }
 
     private fun changeTurn() {
-        turnOfPlayerOne = !turnOfPlayerOne
-        if (turnOfPlayerOne){
-            tvPlayersTurn?.text = getString(R.string.turn_of) + " " + playerOne?.name
+        when(currentTurnSymbol){
+            x -> currentTurnSymbol = o
+            o -> currentTurnSymbol = x
+        }
+
+        if (currentTurnSymbol == playerOne.playerSymbol){
+            tvPlayersTurn.text = getString(R.string.turn_of) + " " + playerOne.name
         }else{
-            tvPlayersTurn?.text = getString(R.string.turn_of) + " " + playerTwo?.name
+            tvPlayersTurn.text = getString(R.string.turn_of) + " " + playerTwo.name
         }
-    }
-
-    //Method stolen from https://codinginflow.com/tutorials/android/tic-tac-toe/part-3-finish-game
-    private fun checkForWin(): Boolean {
-        val field = Array(3) { arrayOfNulls<String>(3) }
-
-        for (i in 0..2) {
-            for (j in 0..2) {
-                field[i][j] = buttonsArray[i][j].text.toString()
-            }
-        }
-
-        for (i in 0..2) {
-            if (field[i][0] == field[i][1] && field[i][0] == field[i][2] && field[i][0] != "") {
-                return true
-            }
-            if (field[0][i] == field[1][i] && field[0][i] == field[2][i] && field[0][i] != "") {
-                return true
-            }
-        }
-
-        if (field[0][0] == field[1][1] && field[0][0] == field[2][2] && field[0][0] != "") {
-            return true
-        }
-
-        if (field[0][2] == field[1][1] && field[0][2] == field[2][0] && field[0][2] != "") {
-            return true
-        }
-
-        return false
     }
 
     private fun playerWins(player: Player?) {
@@ -161,7 +134,6 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
         Toast.makeText(this, "Draw!", Toast.LENGTH_SHORT).show()
     }
 
-
     private fun resetField() {
         buttonsArray.forEach {
             it.forEach { button ->
@@ -171,10 +143,20 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
         roundCount = 0
         gameEnded = false
 
+        playerOne.swapSymbols()
         if (!isPvP){
-            turnOfPlayerOne = false
+            val AI = playerTwo as AI
+            AI.swapSymbols()
+
+            currentTurnSymbol = o
             changeTurn()
-            initializeUnclickedButtons()
+            if (AI.playerSymbol == x){
+                moveOfAI()
+            }
+        }else{
+            playerTwo.swapSymbols()
+            currentTurnSymbol = o
+            changeTurn()
         }
     }
 
@@ -186,23 +168,6 @@ class GameActivity : AppCompatActivity(), View.OnClickListener {
 
     fun resetGame(view: View) {
         resetField()
-    }
-
-    private fun initializeUnclickedButtons() {
-        unclickedButtons = arrayListOf()
-        buttonsArray.forEach {
-            it.forEach {button ->
-                unclickedButtons!!.add(button)
-            }
-        }
-    }
-
-    private fun setAsClicked(button: Button) {
-        unclickedButtons!!.remove(button)
-    }
-
-    private fun moveOfEnvironment() {
-        unclickedButtons!!.random().performClick()
     }
 
 }
